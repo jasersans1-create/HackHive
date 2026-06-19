@@ -1,0 +1,471 @@
+import React, { useState } from 'react';
+import { motion, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
+import { Terminal, Cpu, Code, Menu, X, ArrowDown } from 'lucide-react';
+import Constellations from './components/Constellations';
+import CustomCursor from './components/CustomCursor';
+import ProjectCard from './components/ProjectCard';
+import GamesSection from './components/GamesSection';
+import StorySection from './components/StorySection';
+import FAQSection from './components/FAQSection';
+import Galaxy from './components/Galaxy';
+import WanderingBee from './components/WanderingBee';
+import HiveField from './components/HiveField';
+import { Project } from './types';
+
+import TerminalText from './components/TerminalText';
+
+const PROJECTS: Project[] = [
+  {
+    id: 'p1',
+    title: 'DumbGPT \uD83E\uDEE0\uD83E\uDD54',
+    tags: ['AI', 'React'],
+    image: '/dumbgpt_ui.png',
+    description: 'The world\'s least employable AI assistant. Ask anything. It will answer incorrectly with confidence.'
+  },
+  {
+    id: 'p2',
+    title: 'Direct JSON \u2194 Raw Protobuf Editor',
+    tags: ['Tooling', 'Web'],
+    image: '/protobuf_ui.png',
+    description: 'Schemaless decode, edit, and re-encode raw protobuf bytes directly in your browser.'
+  },
+  {
+    id: 'p3',
+    title: 'Handheld game console',
+    tags: ['Hardware', 'Retro'],
+    image: '/blue_pcb.png',
+    description: 'Custom PCB designs housing linux capable SoCs to run homebrew emulator games with mechanical switches!'
+  },
+  {
+    id: 'p4',
+    title: 'uVision dev board',
+    tags: ['Embedded', 'C++'],
+    image: '/black_pcb.png',
+    description: 'An open-source ultra low power dev board engineered for computer vision edge-inference.'
+  }
+];
+
+
+const App: React.FC = () => {
+    const { scrollY } = useScroll();
+
+    const { scrollLimit, setScrollLimit } = useState( typeof window !== 'undefined' ? window.innerHeight * 1.5 : 1000);
+
+    const mouseX = useMotionValue(typeof window !== 'undefined' ? window.innerWidth / 2 : 0);
+    const mouseY = useMotionValue(typeof window !== 'undefined' ? window.innerHeight / 2 : 0);
+    const smoothMouseX = useSpring(mouseX, { stiffness: 400, damping: 50 });
+    const smoothMouseY = useSpring(mouseY, { stiffness: 400, damping: 50 });
+
+    const pageShiftX = useTransform(smoothMouseX, [0, typeof window !== 'undefined' ? window.innerWidth : 1000], [-30, 30]);
+    const pageShiftY = useTransform(smoothMouseY, [0, typeof window !== 'undefined' ? window.innerHeight : 1000], [-30, 30]);
+
+    React.useEffect(() => {
+        const HandleResize = () => setScrollLimit(typeof window !== 'undefined' ? window.innerHeight * 1.5);
+        window.addEventListener('resize', HandleResize);
+        return () => window.removeEventListener('resize', HandleResize);
+    } []);
+
+    const galaxyScale = useTransform(scrollY, [0, scrollLimit * 0.8], [1, 0.5]);
+    const galaxyOpacity = useTransform(scrollY, [0, scrollLimit * 0.8], [1, 0]);
+
+    const textScale = useTransform(scrollY, [0, scrollLimit * 0.8], [1, 25]);
+  const textOpacity = useTransform(scrollY, [scrollLimit * 0.3, scrollLimit * 0.8], [1, 0]);
+  const overlayOpacity = useTransform(scrollY, [scrollLimit * 0.8, scrollLimit], [1, 0]);
+  const scrollPromptOpacity = useTransform(scrollY, [0, 100], [1, 0]);
+
+  // Subtle parallax for text layers
+  const heroParallax = useTransform(scrollY, [scrollLimit, scrollLimit + 2000], [0, -150]);
+  const secondaryParallax = useTransform(scrollY, [scrollLimit + 1000, scrollLimit + 3000], [0, -100]);
+  const thirdParallax = useTransform(scrollY, [scrollLimit + 2000, scrollLimit + 4000], [0, -80]);
+
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const scrollToSection = (id: string) => {
+    setMobileMenuOpen(false);
+    const element = document.getElementById(id);
+    if (element) {
+      const headerOffset = 100;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+  
+  const handleMouseMove = (e: React.MouseEvent) => {
+    mouseX.set(e.clientX);
+    mouseY.set(e.clientY);
+  };
+
+  return ( 
+    <div 
+      className="relative min-h-screen text-white selection:bg-white selection:text-black cursor-none overflow-x-hidden bg-[#000]"
+      onMouseMove={handleMouseMove}
+    >
+      {/* Intro Scroll Runway */}
+      <div className="absolute top-0 w-full h-[150vh] pointer-events-none" />
+
+      {/* BACKGROUND EFFECTS */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <Constellations />
+        <HiveField />
+      </div>
+
+      {/* OVERLAY INTRO */}
+      <motion.div
+        className="fixed inset-0 z-40 flex justify-center items-center pointer-events-none overflow-hidden bg-transparent"
+        style={{ opacity: overlayOpacity }}
+      >
+        {/* The solid black intro background that fades out */}
+        <motion.div 
+          className="absolute inset-0 bg-[#000]"
+          style={{ opacity: overlayOpacity }}
+        />
+
+        {/* The Galaxy replaces the expanding white ring and sits at the edge of the mask hole */}
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center will-change-transform"
+          style={{
+            scale: galaxyScale,
+            opacity: galaxyOpacity,
+            transform: 'translateZ(0)',
+          }}
+        >
+          <Galaxy />
+        </motion.div>
+      </motion.div>
+
+      {/* Title Text inside the orb */}
+      <motion.div
+        className="fixed inset-0 flex flex-col items-center justify-center z-50 pointer-events-none will-change-transform"
+        style={{ opacity: textOpacity, scale: textScale }}
+      >
+        <div className="relative flex items-center justify-center mb-6 w-3/4 max-w-[min(50rem,90vw)]">
+          {/* Better performance glow instead of CSS filter drop-shadow */}
+          <div className="absolute inset-0 bg-black/80 blur-[40px] rounded-[100%] pointer-events-none" />
+          <motion.img 
+            src="/hackhive.webp" 
+            alt="HackHive" 
+            className="w-full relative z-10 pointer-events-none object-contain"
+          />
+        </div>
+        <p className="relative z-10 font-mono text-gray-400 mt-2 md:mt-4 tracking-[0.5em] md:tracking-[0.8em] text-[8px] md:text-xs uppercase text-center">
+          where ideas swarm
+          <span className="absolute inset-0 bg-black/60 blur-[10px] -z-10 rounded-full" />
+        </p>
+      </motion.div>
+
+      {/* Scroll to unleash */}
+      <motion.div 
+        className="fixed bottom-12 left-0 right-0 flex flex-col items-center justify-center z-50 pointer-events-none"
+        style={{ opacity: scrollPromptOpacity }}
+      >
+        <motion.div
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="flex flex-col items-center gap-4"
+        >
+          <span className="font-mono text-xs tracking-widest uppercase text-white/50">Scroll to unleash</span>
+          <ArrowDown className="w-4 h-4 text-white/50" />
+        </motion.div>
+      </motion.div>
+
+      {/* HUD ELEMENTS - FIXED TO VIEWPORT */}
+      <CustomCursor />
+      <WanderingBee />
+      
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 md:px-8 py-6 mix-blend-difference pointer-events-auto">
+        <div className="font-sans text-lg md:text-xl tracking-[0.2em] font-light text-white cursor-default z-50">HACKHIVE</div>
+        
+        {/* Desktop Menu */}
+        <div className="hidden md:flex gap-10 text-xs font-mono tracking-widest uppercase">
+          {['Arcade', 'Community', 'Projects'].map((item) => (
+            <button 
+              key={item} 
+              onClick={() => scrollToSection(item.toLowerCase())}
+              className="hover:text-gray-400 transition-colors text-white cursor-pointer bg-transparent border-none"
+              data-hover="true"
+            >
+              [{item}]
+            </button>
+          ))}
+        </div>
+        <button 
+          onClick={() => scrollToSection('projects')}
+          className="hidden md:inline-block border border-white/20 px-8 py-3 text-xs font-mono tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300 text-white cursor-pointer bg-transparent rounded-none"
+          data-hover="true"
+        >
+          Deploy
+        </button>
+
+        {/* Mobile Menu Toggle */}
+        <button 
+          className="md:hidden text-white z-50 relative w-10 h-10 flex items-center justify-center cursor-pointer"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? <X /> : <Menu />}
+        </button>
+      </nav>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed inset-0 z-[60] bg-[#000]/95 backdrop-blur-xl flex flex-col items-center justify-center gap-8 md:hidden pointer-events-auto border-b border-white/10"
+          >
+            {['Arcade', 'Community', 'Projects'].map((item) => (
+              <button
+                key={item}
+                onClick={() => scrollToSection(item.toLowerCase())}
+                className="text-2xl font-mono text-white hover:text-gray-400 transition-colors uppercase bg-transparent border-none"
+              >
+                [{item}]
+              </button>
+            ))}
+            <button 
+              onClick={() => scrollToSection('projects')}
+              className="mt-8 border border-white/20 px-10 py-4 text-xs font-mono tracking-widest uppercase bg-transparent text-white hover:bg-white hover:text-black transition-all rounded-none"
+            >
+              Deploy
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* MAIN PAGE CONTAINER */}
+      <motion.div 
+        className="relative w-full z-10 bg-transparent flex flex-col"
+        style={{ marginTop: '150vh', x: pageShiftX, y: pageShiftY }}
+      >
+        {/* HERO SECTION */}
+        <header className="relative min-h-[70vh] flex flex-col items-center justify-center overflow-hidden px-4 md:py-32">
+          <div className="z-10 text-center flex flex-col items-center w-full max-w-6xl pb-24 md:pb-20">
+            {/* Date / Location */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, delay: 0.2 }}
+              className="flex items-center gap-3 md:gap-6 text-[10px] md:text-xs font-mono text-gray-400 tracking-[0.2em] md:tracking-[0.4em] uppercase mb-4 border border-white/10 px-6 py-3 rounded-none backdrop-blur-sm"
+            >
+              <span>SYS_INIT</span>
+              <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-white animate-pulse rounded-none"/>
+              <span>HIVE_OF_HACKERS</span>
+            </motion.div>
+
+            {/* Main Title */}
+            <motion.div 
+               className="relative w-full flex justify-center items-center mt-4 border-y border-white/10 py-12 perspective-1000"
+            >
+              <div className="relative w-full max-w-4xl mx-auto flex items-center justify-center">
+                {/* Performance-friendly glow instead of CSS filter */}
+                <div className="absolute inset-0 bg-black/80 blur-[60px] rounded-[100%] pointer-events-none -z-10" />
+                <motion.img 
+                  src="/hackhive.webp"
+                  alt="HackHive"
+                  className="w-full object-contain relative z-10"
+                  initial={{ rotateX: 45, opacity: 0, y: 100 }}
+                  animate={{ rotateX: 0, opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 50, damping: 20 }}
+                  whileHover={{ 
+                    scale: 1.05, 
+                    rotate: 1, 
+                    transition: { type: "tween" }
+                  }}
+                />
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.5, delay: 0.5, ease: "circOut" }}
+              className="w-[1px] h-20 bg-white/20 mt-8 mb-8 mx-auto"
+            />
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.8, duration: 1 }}
+              className="text-xs md:text-sm font-mono text-gray-500 max-w-xl mx-auto px-4 uppercase tracking-[0.3em] flex items-center justify-center"
+            >
+              <TerminalText text="build [break] scale" delay={1200} />
+            </motion.p>
+          </div>
+        </header>
+
+        {/* STORY OVERVIEW */}
+        <StorySection />
+
+        {/* ARCADE GAMES SECTION */}
+        <GamesSection />
+
+        {/* PROJECTS SECTION */}
+        <section id="projects" className="relative z-10 py-20 md:py-32 border-t border-white/10">
+          <div className="max-w-[1600px] mx-auto px-4 md:px-6">
+            <motion.div 
+              className="flex flex-col justify-between items-start mb-16 md:mb-24 px-4 border-l-2 border-white pl-6"
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            >
+              <h2 className="text-3xl md:text-5xl font-sans font-light uppercase tracking-widest leading-[1.1] mb-4">
+                SYSTEM<br/>OUTCOMES
+              </h2>
+              <p className="text-gray-500 font-mono tracking-widest uppercase text-xs">
+                // Projects built by our community
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-white/10 border border-white/10">
+              {PROJECTS.map((project, i) => (
+                <motion.div 
+                  key={project.id} 
+                  className="bg-[#000]"
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.1 }}
+                  transition={{ duration: 0.8, delay: i * 0.2, ease: "easeOut" }}
+                >
+                  <ProjectCard project={project} />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* COMMUNITY SECTION */}
+        <section id="community" className="relative z-10 py-20 md:py-32 border-t border-white/10 overflow-hidden bg-[#000]">
+
+          <div className="max-w-7xl mx-auto px-4 md:px-6 relative">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-16 items-start">
+              <motion.div 
+                className="lg:col-span-5 order-2 lg:order-1 border border-white/10 p-8 md:p-12 bg-black/50 backdrop-blur-sm"
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              >
+                <h2 className="text-2xl md:text-4xl font-sans font-light mb-6 md:mb-8 tracking-widest uppercase">
+                  JOIN THE COLLECTIVE
+                </h2>
+                <div className="w-12 h-px bg-white mb-6"></div>
+                <p className="text-sm md:text-base text-gray-400 mb-8 md:mb-12 font-mono leading-relaxed">
+                  We are a small team working with hackclub to build our own vibrant community . Whether you're a coder, designer, or just passionate about tech, there's a place for you here. Join us to collaborate on projects, attend workshops, and be part of an ecosystem that celebrates creativity and learning, while giving back to the community.
+                </p>
+                
+                <motion.div 
+                  className="space-y-6"
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: "-100px" }}
+                  variants={{
+                    visible: { transition: { staggerChildren: 0.2 } },
+                    hidden: {}
+                  }}
+                >
+                  {[
+                    { icon: Terminal, title: 'Find your team', desc: 'Meet like-minded individuals and collaborate on exciting projects.' },
+                    { icon: Cpu, title: 'Experts for help', desc: 'Get guidance from peers who have shipped before.' },
+                    { icon: Code, title: 'Rewards!', desc: 'Earn recognition and rewards for every hour you spend learning.' },
+                  ].map((feature, i) => (
+                    <motion.div 
+                      key={i} 
+                      className="flex items-start gap-4 border-t border-white/10 pt-6"
+                      variants={{
+                        hidden: { opacity: 0, x: -20, filter: 'blur(10px)' },
+                        visible: { opacity: 1, x: 0, filter: 'blur(0px)', transition: { duration: 0.8, ease: "easeOut" } }
+                      }}
+                      whileHover={{ scale: 1.02, x: 10, backgroundColor: "rgba(255,255,255,0.02)" }}
+                    >
+                      <div className="p-2 border border-white/20">
+                        <feature.icon className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                         <h4 className="text-xs md:text-sm tracking-widest text-white uppercase font-mono mb-2">{feature.title}</h4>
+                        <p className="text-xs text-gray-500 font-mono">{feature.desc}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.6 }}
+                  className="mt-12"
+                >
+                  <motion.button 
+                    className="group relative px-8 py-4 bg-white hover:bg-gray-200 text-black font-mono text-sm tracking-[0.2em] uppercase transition-all w-full sm:w-auto overflow-hidden flex items-center justify-center gap-4"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <span className="relative z-10">Join us!</span>
+                    <Terminal className="w-4 h-4 relative z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent translate-x-[-100%] group-hover:animate-[sweep_1s_ease-in-out]" />
+                  </motion.button>
+                </motion.div>
+              </motion.div>
+
+              <div className="lg:col-span-7 relative h-[300px] md:h-full min-h-[500px] w-full order-1 lg:order-2 border border-white/10 p-2">
+                <div className="relative h-full w-full overflow-hidden group">
+                  <img 
+                    src="https://assets.hackclub.com/banners/2026.svg" 
+                    alt="Hackers collaborating" 
+                    className="h-full w-full object-cover transition-transform duration-[1.5s] group-hover:scale-105 filter grayscale will-change-transform" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90" />
+                  
+                  <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 flex flex-col gap-2">
+                    <div className="text-5xl md:text-8xl font-mono font-light text-white opacity-20">
+                      //
+                    </div>
+                    <div className="text-[10px] md:text-xs font-mono tracking-[0.3em] uppercase text-gray-400">
+                      SYS_LOC: NEW_DELHI
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* FAQ SECTION */}
+        <FAQSection />
+
+        <footer className="relative z-10 py-8 md:py-12 bg-[#000] border-t border-white/10">
+          <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+            <div>
+               <div className="font-sans text-xl md:text-2xl font-light tracking-[0.2em] mb-4 text-white">HACKHIVE</div>
+               <div className="flex gap-2 text-[10px] font-mono text-gray-600 uppercase tracking-widest">
+                 <span>&copy; {new Date().getFullYear()} CORE_SYSTEM</span>
+               </div>
+            </div>
+            
+            <div className="flex gap-6 md:gap-8 flex-wrap">
+              <motion.a whileHover={{ scale: 1.2, rotate: -10 }} href="https://discord.gg/YJFJ4DyD6D" className="text-gray-500 hover:text-white font-mono uppercase text-[10px] tracking-widest transition-colors cursor-pointer" data-hover="true">
+                [DSCD]
+              </motion.a>
+              <motion.a whileHover={{ scale: 1.2, rotate: 10 }} href="https://hack.club/join/GXVIWV" className="text-gray-500 hover:text-white font-mono uppercase text-[10px] tracking-widest transition-colors cursor-pointer" data-hover="true">
+                [GH]
+              </motion.a>
+            </div>
+          </div>
+        </footer>
+      </motion.div>
+    </div>
+  );
+};
+
+export default App;
