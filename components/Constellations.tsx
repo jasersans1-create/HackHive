@@ -1,5 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 
+const POINTER_OFFSCREEN = -1000;
+const PARTICLE_DENSITY = 1400;
+const LINK_DISTANCE = 80;
+const MOUSE_LINK_DISTANCE = 150;
+
 const Constellations = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -7,16 +12,15 @@ const Constellations = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const context = canvas.getContext('2d');
+    if (!context) return;
 
     let width = window.innerWidth;
-    let height = Math.max(window.innerHeight, 2000); // Allow it to span tall if needed, we'll set fixed to window for background
+    let height = window.innerHeight;
     
-    // Resize handler
     const setSize = () => {
       width = window.innerWidth;
-      height = window.innerHeight; // Keep it viewport sized and sticky
+      height = window.innerHeight;
       canvas.width = width;
       canvas.height = height;
     };
@@ -24,9 +28,8 @@ const Constellations = () => {
     setSize();
     window.addEventListener('resize', setSize);
 
-    // Particle system
     const particles: Particle[] = [];
-    const particleCount = Math.floor(width * height / 1400); // Responsive particle count
+    const particleCount = Math.floor(width * height / PARTICLE_DENSITY);
 
     class Particle {
       x: number;
@@ -37,7 +40,6 @@ const Constellations = () => {
       baseY: number;
       size: number;
       color: string;
-    
 
       constructor() {
         this.x = Math.random() * width;
@@ -49,69 +51,54 @@ const Constellations = () => {
         this.size = Math.random() * 2 + 0.5;
         this.color = `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.1})`;
       }
-    update(mouseX: number, mouseY: number) {
+
+      update(mouseX: number, mouseY: number) {
         this.x += this.vx;
         this.y += this.vy;
 
-        // Bounce off walls
         if (this.x < 0 || this.x > width) this.vx *= -1;
         if (this.y < 0 || this.y > height) this.vy *= -1;
 
-        // Mouse interaction
-        if (mouseX !== -1000) {
+        if (mouseX !== POINTER_OFFSCREEN) {
           const dx = mouseX - this.x;
           const dy = mouseY - this.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < 1) return;
+
           const forceDirectionX = dx / distance;
           const forceDirectionY = dy / distance;
-          
-          // Repel radius
           const maxDistance = 150;
-          let force = (maxDistance - distance) / maxDistance;
+          const force = Math.max(0, (maxDistance - distance) / maxDistance);
           
-          if (force < 0) force = 0;
-          
-          // Push particles away
           if (distance < maxDistance) {
             this.x -= forceDirectionX * force * 5;
             this.y -= forceDirectionY * force * 5;
           }
           
-          // Slowly return to base speed
           if (this.x !== this.baseX) {
-             const dx2 = this.x - this.baseX;
-             this.x -= dx2/100;
+            const dx2 = this.x - this.baseX;
+            this.x -= dx2 / 100;
           }
           if (this.y !== this.baseY) {
-             const dy2 = this.y - this.baseY;
-             this.y -= dy2/100;
+            const dy2 = this.y - this.baseY;
+            this.y -= dy2 / 100;
           }
         }
       }
-
-      draw() {
-        if (!ctx) return;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-      }
     }
 
-    // Init particles
     for (let i = 0; i < particleCount; i++) {
-        particles.push(new Particle());
+      particles.push(new Particle());
     }
 
-    let mouseX = -1000;
-    let mouseY = -1000;
+    let mouseX = POINTER_OFFSCREEN;
+    let mouseY = POINTER_OFFSCREEN;
 
     const handleMouseMove = (e: MouseEvent) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
     };
     
-    // Track scroll to offset particles
     let scrollY = window.scrollY;
     let targetScrollY = window.scrollY;
     
@@ -123,63 +110,93 @@ const Constellations = () => {
     window.addEventListener('scroll', handleScroll);
 
     let animationFrameId: number;
+    let isPageVisible = !document.hidden;
+
+    const handleVisibilityChange = () => {
+      isPageVisible = !document.hidden;
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const animate = () => {
-      // Smooth scroll interpolation
+      if (!isPageVisible) {
+        animationFrameId = requestAnimationFrame(animate);
+        return;
+      }
+
+      // Smooth the scroll value so the constellation layer drifts instead of snapping.
       scrollY += (targetScrollY - scrollY) * 0.1;
       
-      ctx.clearRect(0, 0, width, height);
+      context.clearRect(0, 0, width, height);
 
-      // Draw lines between close particles
-      for (let i = 0; i < particles.length; i++) {
-          particles[i].update(mouseX, mouseY);
+      const buckets = new Map<string, Array<{ index: number; x: number; y: number; particle: Particle }>>();
+      const frameParticles = particles.map((particle, index) => {
+        particle.update(mouseX, mouseY);
           
-          // Apply parallax based on particle size (closer = bigger = faster)
-          const parallaxFactor = particles[i].size * 0.2;
-          const py = particles[i].y - (scrollY * parallaxFactor);
-          // Loop particles when they scroll off screen
-          const wrappedY = ((py % height) + height) % height;
-          
-          // Draw individual particle
-          ctx.beginPath();
-          ctx.arc(particles[i].x, wrappedY, particles[i].size, 0, Math.PI * 2);
-          ctx.fillStyle = particles[i].color;
-          ctx.fill();
-          
-          for (let j = i; j < particles.length; j++) {
-              const py2 = particles[j].y - (scrollY * (particles[j].size * 0.2));
-              const wrappedY2 = ((py2 % height) + height) % height;
+        const parallaxFactor = particle.size * 0.2;
+        const py = particle.y - (scrollY * parallaxFactor);
+        const wrappedY = ((py % height) + height) % height;
+        const frameParticle = { index, x: particle.x, y: wrappedY, particle };
+        const bucketKey = `${Math.floor(frameParticle.x / LINK_DISTANCE)}:${Math.floor(frameParticle.y / LINK_DISTANCE)}`;
+        const bucket = buckets.get(bucketKey);
 
-              // Check distance with wrapped coordinates
-              let dx = particles[i].x - particles[j].x;
-              let dy = wrappedY - wrappedY2;
+        if (bucket) {
+          bucket.push(frameParticle);
+        } else {
+          buckets.set(bucketKey, [frameParticle]);
+        }
+
+        return frameParticle;
+      });
+
+      for (const frameParticle of frameParticles) {
+        const { index, x, y, particle } = frameParticle;
+          
+        context.beginPath();
+        context.arc(x, y, particle.size, 0, Math.PI * 2);
+        context.fillStyle = particle.color;
+        context.fill();
+
+        const cellX = Math.floor(x / LINK_DISTANCE);
+        const cellY = Math.floor(y / LINK_DISTANCE);
+
+        for (let offsetX = -1; offsetX <= 1; offsetX++) {
+          for (let offsetY = -1; offsetY <= 1; offsetY++) {
+            const neighbors = buckets.get(`${cellX + offsetX}:${cellY + offsetY}`);
+            if (!neighbors) continue;
+
+            for (const neighbor of neighbors) {
+              if (neighbor.index <= index) continue;
+
+              const dx = x - neighbor.x;
+              const dy = y - neighbor.y;
+              const distanceSquared = dx * dx + dy * dy;
               
-              const distance = Math.sqrt(dx * dx + dy * dy);
-              
-              if (distance < 80) {
-                  ctx.beginPath();
-                  ctx.strokeStyle = `rgba(255, 255, 255, ${0.15 - distance/80 * 0.15})`;
-                  ctx.lineWidth = 0.5;
-                  ctx.moveTo(particles[i].x, wrappedY);
-                  ctx.lineTo(particles[j].x, wrappedY2);
-                  ctx.stroke();
+              if (distanceSquared < LINK_DISTANCE * LINK_DISTANCE) {
+                const distance = Math.sqrt(distanceSquared);
+                context.beginPath();
+                context.strokeStyle = `rgba(255, 255, 255, ${0.15 - distance / LINK_DISTANCE * 0.15})`;
+                context.lineWidth = 0.5;
+                context.moveTo(x, y);
+                context.lineTo(neighbor.x, neighbor.y);
+                context.stroke();
               }
+            }
           }
+        }
           
-          // Draw lines to mouse (no scroll wrapping needed for mouse, just local coords)
-          // Since mouse is in screen space, we use wrappedY
-          const dxMouse = mouseX - particles[i].x;
-          const dyMouse = mouseY - wrappedY;
-          const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+        const dxMouse = mouseX - x;
+        const dyMouse = mouseY - y;
+        const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
           
-          if (distMouse < 150) {
-              ctx.beginPath();
-              ctx.strokeStyle = `rgba(100, 200, 255, ${0.3 - distMouse/150 * 0.3})`;
-              ctx.lineWidth = 1;
-              ctx.moveTo(particles[i].x, wrappedY);
-              ctx.lineTo(mouseX, mouseY);
-              ctx.stroke();
-          }
+        if (distMouse < MOUSE_LINK_DISTANCE) {
+          context.beginPath();
+          context.strokeStyle = `rgba(100, 200, 255, ${0.3 - distMouse / MOUSE_LINK_DISTANCE * 0.3})`;
+          context.lineWidth = 1;
+          context.moveTo(x, y);
+          context.lineTo(mouseX, mouseY);
+          context.stroke();
+        }
       }
 
       animationFrameId = requestAnimationFrame(animate);
@@ -191,6 +208,7 @@ const Constellations = () => {
       window.removeEventListener('resize', setSize);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);

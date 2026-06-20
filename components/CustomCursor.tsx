@@ -1,22 +1,30 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
-*/
-
-
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, useSpring, useMotionValue, AnimatePresence } from 'framer-motion';
 
+type CursorParticle = {
+  id: number;
+  x: number;
+  y: number;
+  driftX: number;
+  driftY: number;
+  rotate: number;
+  color: string;
+};
+
+const TRAIL_LIFETIME_MS = 800;
+const TRAIL_SPAWN_INTERVAL_MS = 30;
+const MAX_TRAIL_PARTICLES = 20;
+
 const CustomCursor: React.FC = () => {
   const [isHovering, setIsHovering] = useState(false);
-  const [particles, setParticles] = useState<{ id: number, x: number, y: number, color: string }[]>([]);
+  const [particles, setParticles] = useState<CursorParticle[]>([]);
   const particleIdCounter = useRef(0);
+  const hoveringRef = useRef(false);
   
-  // Initialize off-screen to prevent flash
+  // Start off-screen so the custom cursor does not flash at the top-left before the first mouse move.
   const mouseX = useMotionValue(-100);
   const mouseY = useMotionValue(-100);
   
-  // Smooth spring animation
   const springConfig = { damping: 20, stiffness: 350, mass: 0.1 }; 
   const x = useSpring(mouseX, springConfig);
   const y = useSpring(mouseY, springConfig);
@@ -29,29 +37,36 @@ const CustomCursor: React.FC = () => {
       mouseY.set(e.clientY);
 
       const target = e.target as HTMLElement;
-      const clickable = target.closest('button') || 
-                        target.closest('a') || 
-                        target.closest('.cursor-pointer') ||
-                        target.closest('[data-hover="true"]');
-      setIsHovering(!!clickable);
+      const clickable =
+        target.closest('button') ||
+        target.closest('a') ||
+        target.closest('.cursor-pointer') ||
+        target.closest('[data-hover="true"]');
+      const nextHovering = !!clickable;
+      if (hoveringRef.current !== nextHovering) {
+        hoveringRef.current = nextHovering;
+        setIsHovering(nextHovering);
+      }
 
-      // Spawn particles
       const now = performance.now();
-      if (now - lastTime > 30) { // Limit spawn rate
+      if (now - lastTime > TRAIL_SPAWN_INTERVAL_MS) {
         lastTime = now;
         const color = `hsl(${Math.random() * 360}, 100%, 70%)`;
         setParticles(prev => [
-          ...prev.slice(-20), // Keep trail short
+          ...prev.slice(-(MAX_TRAIL_PARTICLES - 1)),
           { 
             id: particleIdCounter.current++, 
             x: e.clientX, 
             y: e.clientY,
+            driftX: (Math.random() - 0.5) * 100,
+            driftY: (Math.random() - 0.5) * 100,
+            rotate: Math.random() * 360,
             color
           }
         ]);
         setTimeout(() => {
           setParticles(prev => prev.slice(1));
-        }, 800);
+        }, TRAIL_LIFETIME_MS);
       }
     };
 
@@ -69,9 +84,9 @@ const CustomCursor: React.FC = () => {
             animate={{ 
               opacity: 0, 
               scale: 0, 
-              x: p.x + (Math.random() - 0.5) * 100, 
-              y: p.y + (Math.random() - 0.5) * 100,
-              rotate: Math.random() * 360
+              x: p.x + p.driftX,
+              y: p.y + p.driftY,
+              rotate: p.rotate
             }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="fixed top-0 left-0 z-[9998] pointer-events-none rounded-full mix-blend-screen"

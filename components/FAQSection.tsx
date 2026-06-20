@@ -2,30 +2,36 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus } from 'lucide-react';
 
-const FAQ_DATA = [
+type FAQItem = {
+  question: string;
+  answer: string;
+};
+
+const FAQ_DATA: FAQItem[] = [
   {
     question: "WHAT IS HACKHIVE?",
-    answer: "HackHive is an official Delhi-based node of Hack Club. We're a community of teenagers who code, build hardware, and create together. It's an IRL space to find co-founders, work on real projects, and level up your skills."
+    answer: "HackHive is a local Hack Club group for students who want to make things with other people around. Code, hardware, games, design, random prototypes, all of it counts. The point is to stop waiting until you feel ready and just start building."
   },
   {
-    question: "HOW DO I EARN A MACBOOK?",
-    answer: "Through Hackatime, every hour you spend writing real code is tracked across your IDE. You can redeem these hours for API credits, custom stickers, mechanical keyboards, and eventually, a Macbook. The system verifies your keystrokes and commits to keep things fair."
+    question: "HOW DOES HACKATIME WORK?",
+    answer: "Hackatime tracks real coding time from your editor. It is basically proof that you showed up and worked on your project. Those hours can help you get API credits, stickers, parts, keyboards, and bigger grants when you keep going."
   },
   {
     question: "IS AI CODE GENERATION ALLOWED?",
-    answer: "Yes, but it's capped at 30%. The core philosophy here is to learn by doing. Generating all your code with AI tools like Copilot, Cursor, or ChatGPT will get flagged by the Hackatime system. Write real code, understand what you build, and use AI just as an assistant."
+    answer: "Yes, use it when it helps. Just do not let it write the whole thing while you sit there. A good rule: you should still understand the code, fix the bugs, and be able to explain what changed."
   },
   {
     question: "DO I NEED TO BE AN EXPERT?",
-    answer: "Absolutely not. Whether you're writing your first HTML tag or compiling a custom Linux kernel, you belong here. Setup just takes a willingness to learn and twenty minutes a day to start tracking your progress."
+    answer: "No. Please do not wait for that. You can show up with your first HTML file, a broken Arduino sketch, or a project folder named final-final-v3. We will meet you there."
   },
   {
     question: "HOW MUCH DOES IT COST?",
-    answer: "Nothing. Everything at HackHive and Hack Club is 100% free for teenagers. Period."
+    answer: "Nothing. HackHive and Hack Club are free for teenagers. Bring curiosity, not money."
   }
 ];
 
 const FAQSection = () => {
+  // Keep the first answer open so the section does not feel empty on arrival.
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
@@ -33,11 +39,11 @@ const FAQSection = () => {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-16 md:mb-24">
           <div className="h-px w-12 bg-white/30" />
-          <span className="font-mono text-gray-500 text-xs md:text-sm tracking-[0.3em] uppercase">SYSTEM.LOG_04 // QUERY_DATABASE</span>
+          <span className="font-mono text-gray-500 text-xs md:text-sm tracking-[0.3em] uppercase">NOTES // THINGS PEOPLE ASK</span>
         </div>
 
         <h2 className="text-3xl md:text-5xl font-sans font-light tracking-widest uppercase mb-16 md:mb-24 text-white">
-          FREQUENTLY_<br />ASKED_QUESTIONS
+          QUESTIONS_<br />WE_GET
         </h2>
 
         <div className="space-y-4">

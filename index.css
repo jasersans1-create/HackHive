@@ -1,9 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700&family=JetBrains+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
 
+/* Tailwind v4 design tokens used throughout the handmade terminal-style UI. */
 @theme {
   --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+  overflow-x: clip;
 }
 
 @keyframes sweep {
@@ -16,10 +24,53 @@
   50% { opacity: 0.15; }
 }
 
+@keyframes cursor-bee-wing-left {
+  0%, 100% { transform: rotate(-10deg) scaleY(1); }
+  50% { transform: rotate(18deg) scaleY(0.5); }
+}
+
+@keyframes cursor-bee-wing-right {
+  0%, 100% { transform: rotate(8deg) scaleY(1); }
+  50% { transform: rotate(-16deg) scaleY(0.52); }
+}
+
 body {
   background-color: #000;
   color: #fff;
   cursor: none;
+  margin: 0;
+  min-height: 100%;
+  overflow-x: clip;
+}
+
+#root {
+  min-height: 100%;
+  overflow-x: clip;
+}
+
+.page-shift-clip {
+  overflow: clip;
+  padding-block: 48px;
+  margin-block: -48px;
+}
+
+.cursor-bee {
+  transform-origin: center;
+  filter: saturate(1.12) contrast(1.05);
+}
+
+.cursor-bee-wing {
+  transform-box: fill-box;
+  transform-origin: 12% 82%;
+  will-change: transform;
+}
+
+.cursor-bee-wing-left {
+  animation: cursor-bee-wing-left 82ms linear infinite;
+}
+
+.cursor-bee-wing-right {
+  animation: cursor-bee-wing-right 82ms linear infinite;
 }
 
 .mask-gradient {
@@ -30,7 +81,14 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@media (pointer: coarse) {
+  body {
+    cursor: auto;
+  }
 }

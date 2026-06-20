@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
-import { Terminal, Cpu, Code, Menu, X, ArrowDown } from 'lucide-react';
+import { Terminal, Cpu, Code, Menu, X, ArrowDown, type LucideIcon } from 'lucide-react';
 import Constellations from './components/Constellations';
 import CustomCursor from './components/CustomCursor';
 import ProjectCard from './components/ProjectCard';
@@ -9,10 +9,13 @@ import StorySection from './components/StorySection';
 import FAQSection from './components/FAQSection';
 import Galaxy from './components/Galaxy';
 import WanderingBee from './components/WanderingBee';
+import CursorBee from './components/CursorBee';
 import HiveField from './components/HiveField';
-import { Project } from './types';
+import type { Project } from './types';
 
 import TerminalText from './components/TerminalText';
+
+const NAV_ITEMS = ['Arcade', 'Community', 'Projects'] as const;
 
 const PROJECTS: Project[] = [
   {
@@ -20,63 +23,66 @@ const PROJECTS: Project[] = [
     title: 'DumbGPT \uD83E\uDEE0\uD83E\uDD54',
     tags: ['AI', 'React'],
     image: '/dumbgpt_ui.png',
-    description: 'The world\'s least employable AI assistant. Ask anything. It will answer incorrectly with confidence.'
+    description: 'A very unserious chatbot that answers with full confidence and almost no wisdom. Built because making dumb things is also how you learn.'
   },
   {
     id: 'p2',
     title: 'Direct JSON \u2194 Raw Protobuf Editor',
     tags: ['Tooling', 'Web'],
     image: '/protobuf_ui.png',
-    description: 'Schemaless decode, edit, and re-encode raw protobuf bytes directly in your browser.'
+    description: 'A browser tool for poking at raw protobuf bytes without setting up a whole project first. Useful when you just want to see what is inside.'
   },
   {
     id: 'p3',
     title: 'Handheld game console',
     tags: ['Hardware', 'Retro'],
     image: '/blue_pcb.png',
-    description: 'Custom PCB designs housing linux capable SoCs to run homebrew emulator games with mechanical switches!'
+    description: 'A custom PCB experiment for a tiny Linux-capable handheld. Buttons, emulators, weird constraints, and a lot of learning from mistakes.'
   },
   {
     id: 'p4',
     title: 'uVision dev board',
     tags: ['Embedded', 'C++'],
     image: '/black_pcb.png',
-    description: 'An open-source ultra low power dev board engineered for computer vision edge-inference.'
+    description: 'A low-power vision dev board for trying edge AI ideas without dragging around a full laptop. Small board, very real debugging sessions.'
   }
 ];
 
+const COMMUNITY_FEATURES: Array<{ icon: LucideIcon; title: string; desc: string }> = [
+  { icon: Terminal, title: 'Join from anywhere', desc: 'No Delhi HQ right now. If you are in India, you can pull up online.' },
+  { icon: Cpu, title: 'Ask dumb questions', desc: 'Seriously. Debugging feels less cursed when someone sits with you on call.' },
+  { icon: Code, title: 'Get real support', desc: 'Your coding time can turn into grants, hardware, and actual momentum.' },
+];
+
+const getIntroScrollLimit = () => (typeof window === 'undefined' ? 1000 : window.innerHeight * 1.5);
 
 const App: React.FC = () => {
-    const { scrollY } = useScroll();
+  const { scrollY } = useScroll();
 
-    const { scrollLimit, setScrollLimit } = useState( typeof window !== 'undefined' ? window.innerHeight * 1.5 : 1000);
+  // The intro animation should feel proportional to the current viewport height.
+  const [scrollLimit, setScrollLimit] = useState(getIntroScrollLimit);
 
-    const mouseX = useMotionValue(typeof window !== 'undefined' ? window.innerWidth / 2 : 0);
-    const mouseY = useMotionValue(typeof window !== 'undefined' ? window.innerHeight / 2 : 0);
-    const smoothMouseX = useSpring(mouseX, { stiffness: 400, damping: 50 });
-    const smoothMouseY = useSpring(mouseY, { stiffness: 400, damping: 50 });
+  const mouseX = useMotionValue(typeof window !== 'undefined' ? window.innerWidth / 2 : 0);
+  const mouseY = useMotionValue(typeof window !== 'undefined' ? window.innerHeight / 2 : 0);
+  const smoothMouseX = useSpring(mouseX, { stiffness: 400, damping: 50 });
+  const smoothMouseY = useSpring(mouseY, { stiffness: 400, damping: 50 });
 
-    const pageShiftX = useTransform(smoothMouseX, [0, typeof window !== 'undefined' ? window.innerWidth : 1000], [-30, 30]);
-    const pageShiftY = useTransform(smoothMouseY, [0, typeof window !== 'undefined' ? window.innerHeight : 1000], [-30, 30]);
+  const pageShiftX = useTransform(smoothMouseX, [0, typeof window !== 'undefined' ? window.innerWidth : 1000], [-30, 30]);
+  const pageShiftY = useTransform(smoothMouseY, [0, typeof window !== 'undefined' ? window.innerHeight : 1000], [-30, 30]);
 
-    React.useEffect(() => {
-        const HandleResize = () => setScrollLimit(typeof window !== 'undefined' ? window.innerHeight * 1.5);
-        window.addEventListener('resize', HandleResize);
-        return () => window.removeEventListener('resize', HandleResize);
-    } []);
+  React.useEffect(() => {
+    const handleResize = () => setScrollLimit(getIntroScrollLimit());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-    const galaxyScale = useTransform(scrollY, [0, scrollLimit * 0.8], [1, 0.5]);
-    const galaxyOpacity = useTransform(scrollY, [0, scrollLimit * 0.8], [1, 0]);
+  const galaxyScale = useTransform(scrollY, [0, scrollLimit * 0.8], [1, 0.5]);
+  const galaxyOpacity = useTransform(scrollY, [0, scrollLimit * 0.8], [1, 0]);
 
-    const textScale = useTransform(scrollY, [0, scrollLimit * 0.8], [1, 25]);
+  const textScale = useTransform(scrollY, [0, scrollLimit * 0.8], [1, 25]);
   const textOpacity = useTransform(scrollY, [scrollLimit * 0.3, scrollLimit * 0.8], [1, 0]);
   const overlayOpacity = useTransform(scrollY, [scrollLimit * 0.8, scrollLimit], [1, 0]);
   const scrollPromptOpacity = useTransform(scrollY, [0, 100], [1, 0]);
-
-  // Subtle parallax for text layers
-  const heroParallax = useTransform(scrollY, [scrollLimit, scrollLimit + 2000], [0, -150]);
-  const secondaryParallax = useTransform(scrollY, [scrollLimit + 1000, scrollLimit + 3000], [0, -100]);
-  const thirdParallax = useTransform(scrollY, [scrollLimit + 2000, scrollLimit + 4000], [0, -80]);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -102,30 +108,26 @@ const App: React.FC = () => {
 
   return ( 
     <div 
-      className="relative min-h-screen text-white selection:bg-white selection:text-black cursor-none overflow-x-hidden bg-[#000]"
+      className="relative min-h-screen text-white selection:bg-white selection:text-black cursor-none bg-[#000]"
       onMouseMove={handleMouseMove}
     >
-      {/* Intro Scroll Runway */}
+      {/* This spacer creates the scroll distance needed for the opening zoom sequence. */}
       <div className="absolute top-0 w-full h-[150vh] pointer-events-none" />
 
-      {/* BACKGROUND EFFECTS */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <Constellations />
         <HiveField />
       </div>
 
-      {/* OVERLAY INTRO */}
       <motion.div
         className="fixed inset-0 z-40 flex justify-center items-center pointer-events-none overflow-hidden bg-transparent"
         style={{ opacity: overlayOpacity }}
       >
-        {/* The solid black intro background that fades out */}
         <motion.div 
           className="absolute inset-0 bg-[#000]"
           style={{ opacity: overlayOpacity }}
         />
 
-        {/* The Galaxy replaces the expanding white ring and sits at the edge of the mask hole */}
         <motion.div
           className="absolute inset-0 flex items-center justify-center will-change-transform"
           style={{
@@ -138,13 +140,11 @@ const App: React.FC = () => {
         </motion.div>
       </motion.div>
 
-      {/* Title Text inside the orb */}
       <motion.div
         className="fixed inset-0 flex flex-col items-center justify-center z-50 pointer-events-none will-change-transform"
         style={{ opacity: textOpacity, scale: textScale }}
       >
         <div className="relative flex items-center justify-center mb-6 w-3/4 max-w-[min(50rem,90vw)]">
-          {/* Better performance glow instead of CSS filter drop-shadow */}
           <div className="absolute inset-0 bg-black/80 blur-[40px] rounded-[100%] pointer-events-none" />
           <motion.img 
             src="/hackhive.webp" 
@@ -158,7 +158,6 @@ const App: React.FC = () => {
         </p>
       </motion.div>
 
-      {/* Scroll to unleash */}
       <motion.div 
         className="fixed bottom-12 left-0 right-0 flex flex-col items-center justify-center z-50 pointer-events-none"
         style={{ opacity: scrollPromptOpacity }}
@@ -168,22 +167,20 @@ const App: React.FC = () => {
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           className="flex flex-col items-center gap-4"
         >
-          <span className="font-mono text-xs tracking-widest uppercase text-white/50">Scroll to unleash</span>
+          <span className="font-mono text-xs tracking-widest uppercase text-white/50">Scroll in</span>
           <ArrowDown className="w-4 h-4 text-white/50" />
         </motion.div>
       </motion.div>
 
-      {/* HUD ELEMENTS - FIXED TO VIEWPORT */}
       <CustomCursor />
       <WanderingBee />
+      <CursorBee />
       
-      {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 md:px-8 py-6 mix-blend-difference pointer-events-auto">
         <div className="font-sans text-lg md:text-xl tracking-[0.2em] font-light text-white cursor-default z-50">HACKHIVE</div>
         
-        {/* Desktop Menu */}
         <div className="hidden md:flex gap-10 text-xs font-mono tracking-widest uppercase">
-          {['Arcade', 'Community', 'Projects'].map((item) => (
+          {NAV_ITEMS.map((item) => (
             <button 
               key={item} 
               onClick={() => scrollToSection(item.toLowerCase())}
@@ -199,10 +196,9 @@ const App: React.FC = () => {
           className="hidden md:inline-block border border-white/20 px-8 py-3 text-xs font-mono tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300 text-white cursor-pointer bg-transparent rounded-none"
           data-hover="true"
         >
-          Deploy
+          See builds
         </button>
 
-        {/* Mobile Menu Toggle */}
         <button 
           className="md:hidden text-white z-50 relative w-10 h-10 flex items-center justify-center cursor-pointer"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -211,7 +207,6 @@ const App: React.FC = () => {
         </button>
       </nav>
 
-      {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -220,7 +215,7 @@ const App: React.FC = () => {
             exit={{ opacity: 0, y: -20 }}
             className="fixed inset-0 z-[60] bg-[#000]/95 backdrop-blur-xl flex flex-col items-center justify-center gap-8 md:hidden pointer-events-auto border-b border-white/10"
           >
-            {['Arcade', 'Community', 'Projects'].map((item) => (
+            {NAV_ITEMS.map((item) => (
               <button
                 key={item}
                 onClick={() => scrollToSection(item.toLowerCase())}
@@ -233,21 +228,19 @@ const App: React.FC = () => {
               onClick={() => scrollToSection('projects')}
               className="mt-8 border border-white/20 px-10 py-4 text-xs font-mono tracking-widest uppercase bg-transparent text-white hover:bg-white hover:text-black transition-all rounded-none"
             >
-              Deploy
+              See builds
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* MAIN PAGE CONTAINER */}
-      <motion.div 
-        className="relative w-full z-10 bg-transparent flex flex-col"
-        style={{ marginTop: '150vh', x: pageShiftX, y: pageShiftY }}
-      >
-        {/* HERO SECTION */}
+      <div className="page-shift-clip">
+        <motion.div 
+          className="relative w-full z-10 bg-transparent flex flex-col"
+          style={{ marginTop: '150vh', x: pageShiftX, y: pageShiftY }}
+        >
         <header className="relative min-h-[70vh] flex flex-col items-center justify-center overflow-hidden px-4 md:py-32">
           <div className="z-10 text-center flex flex-col items-center w-full max-w-6xl pb-24 md:pb-20">
-            {/* Date / Location */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -255,17 +248,15 @@ const App: React.FC = () => {
               transition={{ duration: 1, delay: 0.2 }}
               className="flex items-center gap-3 md:gap-6 text-[10px] md:text-xs font-mono text-gray-400 tracking-[0.2em] md:tracking-[0.4em] uppercase mb-4 border border-white/10 px-6 py-3 rounded-none backdrop-blur-sm"
             >
-              <span>SYS_INIT</span>
+              <span>ONLINE_NOW</span>
               <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-white animate-pulse rounded-none"/>
-              <span>HIVE_OF_HACKERS</span>
+              <span>INDIA_WIDE</span>
             </motion.div>
 
-            {/* Main Title */}
             <motion.div 
                className="relative w-full flex justify-center items-center mt-4 border-y border-white/10 py-12 perspective-1000"
             >
               <div className="relative w-full max-w-4xl mx-auto flex items-center justify-center">
-                {/* Performance-friendly glow instead of CSS filter */}
                 <div className="absolute inset-0 bg-black/80 blur-[60px] rounded-[100%] pointer-events-none -z-10" />
                 <motion.img 
                   src="/hackhive.webp"
@@ -298,18 +289,15 @@ const App: React.FC = () => {
               transition={{ delay: 0.8, duration: 1 }}
               className="text-xs md:text-sm font-mono text-gray-500 max-w-xl mx-auto px-4 uppercase tracking-[0.3em] flex items-center justify-center"
             >
-              <TerminalText text="build [break] scale" delay={1200} />
+              <TerminalText text="make things break things learn" delay={1200} />
             </motion.p>
           </div>
         </header>
 
-        {/* STORY OVERVIEW */}
         <StorySection />
 
-        {/* ARCADE GAMES SECTION */}
         <GamesSection />
 
-        {/* PROJECTS SECTION */}
         <section id="projects" className="relative z-10 py-20 md:py-32 border-t border-white/10">
           <div className="max-w-[1600px] mx-auto px-4 md:px-6">
             <motion.div 
@@ -320,10 +308,10 @@ const App: React.FC = () => {
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
               <h2 className="text-3xl md:text-5xl font-sans font-light uppercase tracking-widest leading-[1.1] mb-4">
-                SYSTEM<br/>OUTCOMES
+                STUFF<br/>WE MADE
               </h2>
               <p className="text-gray-500 font-mono tracking-widest uppercase text-xs">
-                // Projects built by our community
+                // real projects, shipped messy
               </p>
             </motion.div>
 
@@ -344,9 +332,7 @@ const App: React.FC = () => {
           </div>
         </section>
 
-        {/* COMMUNITY SECTION */}
         <section id="community" className="relative z-10 py-20 md:py-32 border-t border-white/10 overflow-hidden bg-[#000]">
-
           <div className="max-w-7xl mx-auto px-4 md:px-6 relative">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-16 items-start">
               <motion.div 
@@ -357,11 +343,11 @@ const App: React.FC = () => {
                 transition={{ duration: 0.8, ease: "easeOut" }}
               >
                 <h2 className="text-2xl md:text-4xl font-sans font-light mb-6 md:mb-8 tracking-widest uppercase">
-                  JOIN THE COLLECTIVE
+                  COME BUILD WITH US
                 </h2>
                 <div className="w-12 h-px bg-white mb-6"></div>
                 <p className="text-sm md:text-base text-gray-400 mb-8 md:mb-12 font-mono leading-relaxed">
-                  We are a small team working with hackclub to build our own vibrant community . Whether you're a coder, designer, or just passionate about tech, there's a place for you here. Join us to collaborate on projects, attend workshops, and be part of an ecosystem that celebrates creativity and learning, while giving back to the community.
+                  We are fully online right now. No Delhi HQ, no secret room, no weird gatekeeping. If you are building from anywhere in India, come hang out, ask for help, and ship the messy thing.
                 </p>
                 
                 <motion.div 
@@ -374,11 +360,7 @@ const App: React.FC = () => {
                     hidden: {}
                   }}
                 >
-                  {[
-                    { icon: Terminal, title: 'Find your team', desc: 'Meet like-minded individuals and collaborate on exciting projects.' },
-                    { icon: Cpu, title: 'Experts for help', desc: 'Get guidance from peers who have shipped before.' },
-                    { icon: Code, title: 'Rewards!', desc: 'Earn recognition and rewards for every hour you spend learning.' },
-                  ].map((feature, i) => (
+                  {COMMUNITY_FEATURES.map((feature, i) => (
                     <motion.div 
                       key={i} 
                       className="flex items-start gap-4 border-t border-white/10 pt-6"
@@ -406,33 +388,41 @@ const App: React.FC = () => {
                   transition={{ duration: 0.5, delay: 0.6 }}
                   className="mt-12"
                 >
-                  <motion.button 
+                  <motion.a
+                    href="https://hack.club/join/GXVIWV"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="group relative px-8 py-4 bg-white hover:bg-gray-200 text-black font-mono text-sm tracking-[0.2em] uppercase transition-all w-full sm:w-auto overflow-hidden flex items-center justify-center gap-4"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
+                    data-hover="true"
                   >
                     <span className="relative z-10">Join us!</span>
                     <Terminal className="w-4 h-4 relative z-10" />
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent translate-x-[-100%] group-hover:animate-[sweep_1s_ease-in-out]" />
-                  </motion.button>
+                  </motion.a>
                 </motion.div>
               </motion.div>
 
               <div className="lg:col-span-7 relative h-[300px] md:h-full min-h-[500px] w-full order-1 lg:order-2 border border-white/10 p-2">
                 <div className="relative h-full w-full overflow-hidden group">
                   <img 
-                    src="https://assets.hackclub.com/banners/2026.svg" 
-                    alt="Hackers collaborating" 
-                    className="h-full w-full object-cover transition-transform duration-[1.5s] group-hover:scale-105 filter grayscale will-change-transform" 
+                    src="/hackhive-letter.webp" 
+                    alt="HackHive letter h with bees and a honeycomb pattern"
+                    width={609}
+                    height={665}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-contain bg-[#080b09] p-6 transition-transform duration-700 group-hover:scale-[1.03] md:p-10"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   
                   <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 flex flex-col gap-2">
                     <div className="text-5xl md:text-8xl font-mono font-light text-white opacity-20">
                       //
                     </div>
                     <div className="text-[10px] md:text-xs font-mono tracking-[0.3em] uppercase text-gray-400">
-                      SYS_LOC: NEW_DELHI
+                      SYS_MODE: ONLINE_INDIA
                     </div>
                   </div>
                 </div>
@@ -441,7 +431,6 @@ const App: React.FC = () => {
           </div>
         </section>
         
-        {/* FAQ SECTION */}
         <FAQSection />
 
         <footer className="relative z-10 py-8 md:py-12 bg-[#000] border-t border-white/10">
@@ -449,7 +438,7 @@ const App: React.FC = () => {
             <div>
                <div className="font-sans text-xl md:text-2xl font-light tracking-[0.2em] mb-4 text-white">HACKHIVE</div>
                <div className="flex gap-2 text-[10px] font-mono text-gray-600 uppercase tracking-widest">
-                 <span>&copy; {new Date().getFullYear()} CORE_SYSTEM</span>
+                 <span>&copy; {new Date().getFullYear()} HACKHIVE_ONLINE_INDIA</span>
                </div>
             </div>
             
@@ -458,12 +447,13 @@ const App: React.FC = () => {
                 [DSCD]
               </motion.a>
               <motion.a whileHover={{ scale: 1.2, rotate: 10 }} href="https://hack.club/join/GXVIWV" className="text-gray-500 hover:text-white font-mono uppercase text-[10px] tracking-widest transition-colors cursor-pointer" data-hover="true">
-                [GH]
+                [HC]
               </motion.a>
             </div>
           </div>
         </footer>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 };
