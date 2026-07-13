@@ -22,7 +22,7 @@ const FAQ_DATA: FAQItem[] = [
   },
   {
     question: "DO I NEED TO BE AN EXPERT?",
-    answer: "No. Experts are just beginners with a longer bug history. Show up with your first HTML file, a broken Arduino sketch, or a folder called final-final-v3. We start from wherever you are."
+    answer: "No. Experts are just beginners with a longer failure history. Show up with your first HTML file, a broken Arduino sketch, or a folder called final-final-v3. We start from wherever you are."
   },
   {
     question: "HOW MUCH DOES IT COST?",
