@@ -196,7 +196,7 @@ const App: React.FC = () => {
           ))}
         </div>
         <a
-          href="/join"
+          href="https://hack.club/join/GXVIWV"
           className="hidden md:inline-block border border-white/20 px-8 py-3 text-xs font-mono tracking-widest uppercase hover:bg-white hover:text-black transition-all duration-300 text-white cursor-pointer bg-transparent rounded-none"
           data-hover="true"
         >
@@ -229,7 +229,7 @@ const App: React.FC = () => {
               </button>
             ))}
             <a
-              href="/join"
+              href="https://hack.club/join/GXVIWV"
               className="mt-8 border border-white/20 px-10 py-4 text-xs font-mono tracking-widest uppercase bg-transparent text-white hover:bg-white hover:text-black transition-all rounded-none"
             >
               Join HackHive
@@ -393,7 +393,7 @@ const App: React.FC = () => {
                   className="mt-12"
                 >
                   <motion.a
-                    href="/join"
+                    href="https://hack.club/join/GXVIWV"
                     className="group relative px-8 py-4 bg-white hover:bg-gray-200 text-black font-mono text-sm tracking-[0.2em] uppercase transition-all w-full sm:w-auto overflow-hidden flex items-center justify-center gap-4"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}

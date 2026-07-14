@@ -160,7 +160,7 @@ const StorySection = () => {
                 <motion.a 
                   whileHover={{ scale: 1.1, y: -5, boxShadow: "0px 10px 30px rgba(255,255,255,0.3)" }}
                   whileTap={{ scale: 0.95 }}
-                  href="/join"
+                  href="https://hack.club/join/GXVIWV"
                   className="flex items-center gap-3 px-8 py-4 bg-white text-black font-mono tracking-widest uppercase text-xs hover:bg-gray-200 transition-colors"
                   data-hover="true"
                 >
