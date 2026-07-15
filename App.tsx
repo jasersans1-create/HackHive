@@ -147,7 +147,7 @@ const App: React.FC = () => {
         <div className="relative flex items-center justify-center mb-6 w-3/4 max-w-[min(50rem,90vw)]">
           <div className="absolute inset-0 bg-black/80 blur-[40px] rounded-[100%] pointer-events-none" />
           <motion.img 
-            src="/hackhive.png" 
+            src="/hackhive.svg" 
             alt="HackHive" 
             className="w-full relative z-10 pointer-events-none object-contain"
           />
@@ -178,7 +178,7 @@ const App: React.FC = () => {
       
       <nav className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 md:px-8 py-6 mix-blend-difference pointer-events-auto">
         <img
-          src="/hackhive.png"
+          src="/hackhive.svg"
           alt="HackHive"
           className="h-auto w-28 md:w-36 object-contain z-50"
         />
