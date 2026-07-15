@@ -136,7 +136,7 @@ const StorySection = () => {
               <GlitchText text="[ 03_ONE_HIVE_NO_POSTCODE ]" />
             </div>
             <div className="md:col-span-8 text-xl md:text-3xl font-sans font-light leading-relaxed text-gray-300">
-                <TypewriterText text="HackHive is online and India-wide. Your city, school, grade, and current skill level do not decide whether you belong. Curiosity does. If you are ready to make something and let other people see the work in progress, pull up." />
+                <TypewriterText text="HackHive is a community for makers. If you are ready to make something and let other people see the work in progress, pull up." />
             </div>
           </motion.div>
 
